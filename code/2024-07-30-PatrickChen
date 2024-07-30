@@ -1,0 +1,428 @@
+#include<bits/stdc++.h>
+#include<windows.h>
+#include<stdio.h>
+#include<conio.h>
+#include<time.h>
+using namespace std;
+int hp, mp, water, hungry, san; //血量，体力，水分，饥饿，理智
+//string ID;
+int s, sw, fk, tc; //存储随机数，死亡次数 ，疯狂次数 ，工具变量
+/*int sui(int range)//取随机数
+{
+    return rand()%range+1;
+}*/
+//加了b开头的变量是背包的物品，0是没有，1是有，没有不显示物品名称，以“***”代替。 Object 1
+// 第二的字母是h，意味是后室里特有的，r是红室，m是马尼拉房间 ，如果没有这三个字母就不是特有。
+int bmMEG/*来自M.E.G.的文档*/;
+
+//后室物品
+const int cnt = 19;
+int bhObject[1000];
+const string bhObject_name[1000] = {
+"",
+"杏仁水",
+"层级密钥",
+"驱笑剂",
+"反欧几里得装置",
+"糖果",
+"镜子",
+"记忆罐",
+"小台灯",
+"傻瓜口香糖",
+"稻草人",
+"幽鬼灯光",
+"告死裂片",
+"办公终端",
+"圣甲虫",
+"火盐",
+"皇家口粮",
+"滋水枪",
+"巴别润唇膏",
+"幸运豆奶"
+};
+int read() {
+	while (_kbhit()) _getch();
+	return _getch() - 48;
+}
+//void level0();void level1();
+//滚动字幕
+void say(string a) {
+	int l = a.size();
+	for (int i = 0; i < l; i++) {
+		cout << a[i];
+		if (a[i] != 0)
+			Sleep(10);
+	}
+	printf("\n");
+	Sleep(100);
+}
+//存档
+bool Read()
+{
+	if (!fopen("Backrooms.dat", "r")) return 0;
+    ifstream in("Backrooms.dat");
+	in >> hp >> mp >> water >> hungry >> san >> s >> sw >> fk >> tc;
+	for (int i = 1; i <= cnt; ++i) in >> bhObject[i];
+    in.close();
+	return 1;
+}
+bool Save()
+{
+	if (!fopen("Backrooms.dat", "w")) return 0;
+    ofstream out("Backrooms.dat");
+	out << hp << ' ' << mp << ' ' << water << ' ' << hungry << ' ' << san << ' ' << s << ' ' << sw << ' ' << fk << ' ' << tc << endl;
+	for (int i = 1; i <= cnt; ++i) out << bhObject[i] << " \n"[i == cnt];
+    out.close();
+	return 1;
+}
+void ys(int a) { //更改单个字
+	if (a == 0) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	if (a == 1) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	if (a == 2) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+	if (a == 3) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE);
+	if (a == 4) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED);
+	if (a == 5) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+	if (a >= 6) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+}
+void Bai() {SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);}
+
+int wp() { //随机出现物品
+	int a = rand() % 100;//100%
+	return a;
+}
+
+int sj(int x) { //概率 1~100
+	srand(time(NULL));
+	int a = rand() % 100;//100%
+	if (1 <= a && a <= x) return 1;
+	return 2;
+}
+
+int xd(int x, int y) { //x~y之间的数
+	srand(time(0));
+	return rand() % (y - x + 1) + x;
+}
+
+void bb() { //背包
+	bool f = 0;
+	for (int i = 1, y = 1; i <= cnt; y = y % 6 + 1, ++i) {
+		ys(y);
+		if (bhObject[i]) cout << bhObject_name[i] << "：" << bhObject[i] << endl, f = 1;
+	}
+	if (!f) cout << "空" << endl;
+	Bai();
+	system("pause");
+}
+
+void panding()//判定
+{
+	int i;
+	if (hungry >= 100)
+	{
+		hp -= (hungry / 2) - 49; //扣血
+		hungry = 100;
+	}
+	if (water <= 0) //扣血
+	{
+		hp -= water - 99;
+		water = 0;
+	}
+	if (san <= 0) //判定疯狂
+	{
+		fk++;
+		tc++;
+		say("你疯了");
+		say("输入任意数字退出此界面");
+		cin >> i;
+	}
+	if (hp <= 0) //判定死亡
+	{
+		tc++;
+		sw++;
+		say("你死了");
+		say("输入任意数字退出此界面");
+		cin >> i;
+	}
+}
+
+void chengjiu()//成就
+{
+	int i;
+	system("cls");
+	if (sw == 1)
+	{
+		say("你获得了成就：地府的新业绩");
+		say("获得方式：死亡一次");
+		s++;
+	}
+	else if (sw == 10)
+	{
+		say("你获得了成就：地府常客");
+		say("获得方式：死亡十次");
+		s++;
+	}
+	else if (sw == 100)
+	{
+		say("你获得了成就：阎王：你怎么又双叕来了");
+		say("获得方式：死亡一百次");
+		s++;
+	}
+	else if (fk == 1)
+	{
+		say("你获得了成就：我神好精得很，我精很神好的......");
+		say("获得方式：疯狂一次");
+		s++;
+	}
+	else if (fk == 10)
+	{
+		say("你获得了成就：精神病院SVIP");
+		say("获得方式：疯狂十次");
+		s++;
+	}
+	else if (fk == 100)
+	{
+		say("你获得了成就：这院长的位置归你了");
+		say("获得方式：疯狂一百次");
+		s++;
+	}
+	say("输入任意数字退出此界面");
+	cin >> i;
+}
+
+void level0_red()
+{
+	return ;
+}
+
+void level1() {
+
+}
+void level0()
+{
+	system("cls");
+	system("title level 0");
+	int i, run; //工具变量
+	say("");
+	run = 0;
+	int bs2 = xd(6, 10);
+	while (1)
+	{
+		system("cls");
+		cout << "您当前所处层级：Level 0\nM.E.G.层级文档：\n泛黄的墙纸、潮湿的地毯和以不一致方式安装的荧光灯具。然而，本层中不存在两个完全相同的房间。\n被安装在本层空间中的荧光灯保持无规律闪烁，并以恒定频率发出嗡鸣。这种噪声尤其响亮，明显比正常的荧光灯所能制造的噪音更加刺耳，而对灯具装置进行检查以确定噪声来源的尝试以失败告终。\n浸湿地毯的物质成分始终无法被查明。它既不是水，同时也不能被安全地饮用。" << endl;
+		say("请按下相应数字键做出行动选择");
+		say("1. 行走 2. 休息 3. 查看背包 4. 存档");
+		i = read();
+		if (i == 1)
+		{
+			san -= 1;
+			water -= 5;
+			hungry += 5;
+			mp -= 5;
+			run++;
+			say("嗡嗡作响的灯泡使你愈发烦躁。\n理智-1，饥饿+5，水分-5，体力-5");
+			panding();
+			if (tc != 0)
+			{
+				return ;
+			}
+			if (sj(2) == 1)
+			{
+				say("一片红色映入你的眼帘");
+				say("请输入相应数字做出行动选择");
+				say("1. 离开 2. 前进" );
+				i = read();
+				if (i == 1)
+				{
+					say("你有点不祥的预感，转身离开了这里");
+					say("你获得了成就：明智的决定");
+					say("获取方式：选择不进入level 0的红室");
+					system("pause");
+				}
+				else
+				{
+					say("你勇敢的一头冲进了这片红色地狱...");
+					say("你获得了成就：红色地狱");
+					say("获取方式：进入level 0的红室");
+					level0_red();
+				}
+			}
+			else {
+				say("请输入相应数字做出行动选择");
+				int a = wp(), a1;
+				if (a == 1) {
+					say("你发现了‘杏仁水’！");
+					say("是否拾取？是1，否2");
+					a1 = read();
+					if (a1 == 1) {
+						if (bhObject[1] == 0)  MessageBox(NULL, "等级：安全\n对多数流浪者的生存至关重要。\n切勿将其饮用一瓶罐未满的水\n意味着已有别的流浪者曾把它打开，他很可能已经替换了其中盛放的液体\n或者在水中加入了例如爬菌之类的有害物质。\n使用一小撮火盐就能立刻使液体沸腾，并杀死其中的细菌", "杏仁水", MB_OK); //判断是否出现过
+						bhObject[1]++;
+					}
+				}
+				if (a == 2) {
+					say("你发现了‘火盐’！");
+					say("是否拾取？是1，否2");
+					a1 = read();
+					if (a1 == 1) {
+						if (bhObject[15] == 0)  MessageBox(NULL, "等级：安全\n火盐是一种具有爆炸性的小型晶体，通常在后室中被作为武器使用。\n", "火盐", MB_OK); //判断是否出现过
+						bhObject[15]++;
+					}
+				}
+				if (a == 3) {
+					say("你发现了‘皇家口粮’！");
+					say("是否拾取？1. 是 2. 否");
+					a1 = read();
+					if (a1 == 1) {
+						if (bhObject[16] == 0)  MessageBox(NULL, "等级：安全\n皇家口粮为一种可食用的白色明胶。吃下它的人普遍同意其为“我所吃过的最好吃的东西”", "皇家口粮", MB_OK); //判断是否出现过
+						bhObject[16]++;
+					}
+				}
+				// if (a == 4) {
+				// 	say("你发现了‘墙壁面具’！");
+				// 	say("是否拾取？1. 是 2. 否");
+				// 	a1 = read();
+				// 	if (a1 == 1) {
+				// 		if (bhObject[24] == 0)  MessageBox(NULL, "等级：危险\n墙壁面具是戏剧面具，它可以在后室中不同的层级找到 （更多出现在舞台或剧院）。\n它们会根据佩戴者隐藏自身真实性格能力的不同而变得危险，所以应尽量避免戴上墙壁面具。", "墙壁面具", MB_OK); //判断是否出现过
+				// 		bhObject[24]++;
+				// 	}
+				// }
+				if (a == 4) {
+					say("你发现了‘幸运豆奶’！");
+					say("是否拾取？1. 是 2. 否");
+					a1 = read();
+					if (a1 == 1) {
+						if (bhObject[19] == 0)  MessageBox(NULL, "等级：安全\n幸运豆奶是一种由大豆制成的饮料，在后室颇受欢迎，可以与杏仁水媲美。\n幸运豆奶受欢迎度上升一定程度上得益于坚果过敏的人无法饮用杏仁水。", "幸运豆奶", MB_OK); //判断是否出现过
+						bhObject[19]++;
+					}
+				}
+				continue;
+				say("1. 行走 2. 休息 3. 查看背包");
+				i = read();
+				if (i == 1) {
+					if (sj(2) == 1) {
+						say("请输入相应数字做出行动选择");
+						say("1. 行走 2. 休息 3. 查看背包");
+						//马尼拉房间的入口暂时没有做
+					}
+					else if (run == bs2) { //行动次数
+						say("一阵光闪过，你进入了Level 1"); //目前会进入死循环；
+						level1();
+					}
+					run++;
+				}
+				if (i == 2) {
+					say("潮湿的地面使你感觉不安，但是体力加5。");
+					mp += 5;
+				}
+				if (i == 3) bb();
+			}
+			system("pause");
+		}
+		if (i == 2) {
+			say("潮湿的地面使你感觉不安，但是体力加5。");
+			mp += 5;
+			system("pause");
+		}
+		if (i == 3) bb();
+		if (i == 4) {
+			if (Save()) say("存档成功");
+			else say("存档失败。请检查您的存档文件是否正在被使用。");
+			system("pause");
+		}
+	}
+}
+
+
+void a10()//成就墙
+{
+	int i;
+	system("cls");
+	say("所有成就除标有不唯一否则都为唯一成就");
+	say("成就除标有（NEW!)或不唯一否则都为系列成就");
+	say("标有（MAX）的连续成就为最后一环，无后续成就");
+}
+
+int main() {
+	srand(time(NULL));
+	system("title Back room");
+	while (1)
+	{
+		int i;
+		hp = 100;
+		mp = 100;
+		water = 100;
+		san = 100;
+		hungry = 0;
+		tc = 0;
+		system("cls");
+		ys(3);   //0白  1蓝绿  2绿   3紫   4粉红   5亮黄 6青蓝  say("Backrooms：你曾经来过这里");
+		Bai();
+		ys(5);
+		say("作者：Gears(洛谷名) / 一只摸鱼的屑O5(QQ名)");
+		Bai();
+		ys(2);
+		say("合作者们：\nzyx_dzpd(洛谷名) / 翔翔(QQ名)\n___PatrickChen___(洛谷名 & QQ名)");
+		Bai();
+		ys(1);
+		say("游戏兼规则怪谈交流群：809140433(QQ)");
+		Bai();
+		// ys(4);
+		// say("本游戏无法保存，请勿退出");
+		// Bai();
+		Sleep(1000);
+		Read();
+		// 进度条，我给注释掉了（因为有cls会闪屏而且卡，后面看看怎么解决）
+		// for (int i = 1; i <= 100; i++) {
+		// 	system("cls");
+		// 	ys(1);
+		// 	cout << "                                                          " << i << "%\n         ";
+		// 	for (int j = 1; j <= i; j++) cout << "█";
+		// 	ys(4);
+		// 	cout << "\n抵制不良游戏，拒绝盗版游戏。注意自我保护，谨防受骗上当。适度游戏益脑，沉迷游戏伤身。合理安排时间，享受健康生活。\n";
+		// 	Sleep(10);
+		// }
+
+		system("cls");
+		Bai();
+		say("进入游戏（按1）");
+		say("查看成就墙（按2）");
+		i = read();
+		if (i == 2)
+		{
+			a10();
+		}
+		else if (i == 1)
+		{
+			system("cls");
+//			say("请输入你的游戏ID");
+//			cin>>ID;
+//			s=sui(1000);
+			if (s < 990)
+			{
+				level0();
+			}
+			else if (s < 1000)
+			{
+				say("你疲劳的走在回家的路上。突然，你掉入了地面");
+				say("你来到了level 1");
+				say("es5d26f3gy6sr3d43tf27y");
+				say("你死了");
+				sw++;
+				say("你获得了成就：锟斤拷烫烫烫(不唯一)");
+				say("获取方式：抵达作者未制作区域");
+			}
+			else
+			{
+				say("你疲劳的走在回家的路上。突然，你掉入了地面");
+				say("你来到了level 2");
+				say("sd3fg2e4gsd7g8sf2d0f4fe2b");
+				say("你死了");
+				sw++;
+				say("你获得了成就：锟斤拷烫烫烫(不唯一)");
+				say("获取方式：抵达作者未制作区域(每个区域限定一次)");
+			}
+			chengjiu();
+		}
+	}
+	system("pause");
+	return 0;
+}
